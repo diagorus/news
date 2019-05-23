@@ -1,10 +1,10 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:news/models.dart';
+import 'package:http/http.dart' as http;
+import 'package:news/model/models.dart';
 import 'package:news/screens/wigets/ArticleItemWidget.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -23,14 +23,14 @@ class _SearchState extends State<SearchScreen> {
 
   _SearchState() {
     _searchQueryController.addListener(() {
-//      if (debounceTimer != null) {
-//        debounceTimer.cancel();
-//      }
-//      debounceTimer = Timer(Duration(milliseconds: 500), () {
+      if (debounceTimer != null) {
+        debounceTimer.cancel();
+      }
+      debounceTimer = Timer(Duration(milliseconds: 500), () {
         if (this.mounted) {
           _performSearch(_searchQueryController.text);
         }
-//      });
+      });
     });
   }
 
@@ -43,12 +43,8 @@ class _SearchState extends State<SearchScreen> {
           controller: _searchQueryController,
           style: TextStyle(color: Colors.white, fontSize: 20.0),
           decoration: InputDecoration(
-            prefixIcon: Icon(
-              Icons.search,
-              color: Colors.white,
-            ),
-            hintText: "Search articles...",
-            hintStyle: TextStyle(color: Colors.white),
+            hintText: "Пошук статей...",
+            hintStyle: TextStyle(color: Colors.grey[350]),
           ),
         ),
       ),
@@ -58,11 +54,22 @@ class _SearchState extends State<SearchScreen> {
 
   Widget _buildBody(BuildContext context) {
     if (_isSearching) {
-      return CenterTitle('Searching Github...');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            CircularProgressIndicator(),
+            SizedBox(height: 8),
+            Text("Йде пошук, зачекайте, будь-ласка...")
+          ],
+        ),
+      );
     } else if (_error != null) {
-      return CenterTitle(_error);
+      return Center(child: Text(_error));
     } else if (_searchQueryController.text.isEmpty) {
-      return CenterTitle('Begin Search by typing on search bar');
+      return Center(child: Text("Немає історії пошуку"));
+    } else if (_results.isEmpty) {
+      return Center(child: Text("Нічого не знайдено :("));
     } else {
       return ListView.builder(
           padding: EdgeInsets.symmetric(vertical: 8.0),

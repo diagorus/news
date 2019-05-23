@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:news/models.dart';
+import 'package:news/model/models.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ArticleDetailScreen extends StatelessWidget {

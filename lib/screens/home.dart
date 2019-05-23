@@ -3,31 +3,31 @@ import 'package:flutter/material.dart';
 import 'package:news/screens/search.dart';
 import 'package:news/screens/top_articles.dart';
 
-class MyHomePage extends StatefulWidget {
+import 'all_articles.dart';
 
-  MyHomePage({Key key, this.title}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   int _currentPageIndex = 0;
 
   List<Widget> _pages = [
     TopArticlesWidget(),
-    Center(
-      child: Text("In progress"),
-    ),
+    AllArticlesWidget(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: Text("News"),
+        title: Text("Новини"),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
@@ -42,20 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
           )
         ],
       ),
-      body: _pages[_currentPageIndex],
-      bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentPageIndex,
-          onTap: (pageIndex) {
-            setState(() {
-              _currentPageIndex = pageIndex;
-            });
-          },
-          items: [
-            BottomNavigationBarItem(
-                icon: Icon(Icons.show_chart), title: Text("Top")),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.all_inclusive), title: Text("All")),
-          ]),
+      body: TopArticlesWidget(),
     );
   }
 }

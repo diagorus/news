@@ -10,15 +10,18 @@ description: News app
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   url_launcher: ^5.0.1
-  firebase_auth: ^0.8.3
+  #  firebase_auth: ^0.8.4+5
   flutter_svg: ^0.12.0
   http: ^0.12.0+1
+  intl: ^0.15.7
+  transparent_image: ^1.0.0
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

@@ -1,57 +1,85 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
-import 'package:news/models.dart';
+import 'package:news/model/articles_data_source.dart';
+import 'package:news/model/models.dart';
 import 'package:news/screens/wigets/ArticleItemWidget.dart';
 
-class TopArticlesWidget extends StatelessWidget {
+class TopArticlesWidget extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: fetchNews(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return ListView.builder(
-              itemCount: snapshot.data.length,
-              itemBuilder: (context, index) {
-                Article article = snapshot.data[index];
+  _TopArticlesState createState() => _TopArticlesState();
+}
 
-                return ArticleItemWidget(article: article);
-              });
-        } else if (snapshot.hasError) {
-          return Center(child: Text("${snapshot.error}"));
-        }
+class _TopArticlesState extends State<TopArticlesWidget> {
+  ScrollController _controller =
+  ScrollController(initialScrollOffset: 0.0, keepScrollOffset: true);
 
-        // By default, show a loading spinner
-        return Center(child: CircularProgressIndicator());
-      },
-    );
+  List<Article> items = [];
+
+  int _total = -1;
+
+  int currentPage = 0;
+  bool isLoading = false;
+
+  _TopArticlesState() {
+    _controller.addListener(() {
+      bool isEnd = _controller.offset == _controller.position.maxScrollExtent;
+      if (isEnd && items.length < _total)
+        setState(() {
+          _loadData();
+        });
+    });
   }
 
-  Future<List<Article>> fetchNews() async {
-    final response = await http.get(
-        'https://newsapi.org/v2/top-headlines?country=ua&apiKey=8c655aa98f4a488aa4dcafff411952d5');
-    final responseJson = json.decode(response.body.toString());
+  @override
+  void initState() {
+    super.initState();
 
-    print(responseJson);
+    _loadData();
+  }
 
-    List rawArticles = responseJson['articles'];
-    return rawArticles.map((rawArticle) {
-      final String sourceId = rawArticle['source']['id'];
-      final String sourceName = rawArticle['source']['name'];
+  @override
+  Widget build(BuildContext context) {
+    return _getScreenWidget();
+  }
 
-      final String author = rawArticle['author'];
-      final String title = rawArticle['title'];
-      final String description = rawArticle['description'];
-      final String url = rawArticle['url'];
-      final String urlToImage = rawArticle['urlToImage'];
-      final String publishedAt = rawArticle['publishedAt'];
-      final String content = rawArticle['content'];
+  Widget _getScreenWidget() {
+    if (isLoading && currentPage == 1) {
+      return Center(child: CircularProgressIndicator());
+    } else {
+      return ListView.builder(
+        controller: _controller,
+        itemCount: items.length == _total ? items.length : items.length + 1,
+        itemBuilder: (context, index) {
+          if (index == items.length) {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                child: CircularProgressIndicator(),
+                alignment: Alignment.center,
+              ),
+            );
+          } else {
+            Article article = items[index];
+            return ArticleItemWidget(article: article);
+          }
+        },
+      );
+    }
+  }
 
-      return Article(Source(sourceId, sourceName), author, title, description,
-          url, urlToImage, publishedAt, content);
-    }).toList();
+  _loadData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    currentPage++;
+    var articlesResponse = await ArticlesDataSource.getTop(currentPage);
+
+    setState(() {
+      isLoading = false;
+
+      _total = articlesResponse.totalResults;
+      items.addAll(articlesResponse.articles);
+    });
   }
 }

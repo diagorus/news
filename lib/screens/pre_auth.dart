@@ -34,7 +34,7 @@ class PreAuthScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MyHomePage(),
+                    builder: (context) => HomePage(),
                   ),
                 );
               },
