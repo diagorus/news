@@ -12,22 +12,19 @@ class ArticlesDataSource {
         .get('${baseUrl}top-headlines$apiKeyParam&country=ua&page=$page');
     final responseJson = json.decode(response.body.toString());
 
-    printWrapped(responseJson.toString());
+//    printWrapped(responseJson.toString());
 
-    var parsedResponse = ArticlesResponse.fromMap(responseJson);
-
-    return parsedResponse;
+    return ArticlesResponse.fromMap(responseJson);
   }
 
-  static Future<List<Article>> getAll(int page) async {
+  static Future<ArticlesResponse> getAll(String query, int page) async {
     final response = await http
-        .get('${baseUrl}everything$apiKeyParam&language=ru&page=$page');
+        .get('${baseUrl}everything$apiKeyParam&q=$query&page=$page');
     final responseJson = json.decode(response.body.toString());
 
-    print(responseJson);
+//    printWrapped(responseJson.toString());
 
-    List rawArticles = responseJson['articles'];
-    return rawArticles.map((map) => Article.fromMap(map)).toList();
+    return ArticlesResponse.fromMap(responseJson);
   }
 
   static printWrapped(String text) {

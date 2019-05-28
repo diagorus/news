@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
+import 'package:news/model/articles_data_source.dart';
 import 'package:news/model/models.dart';
-import 'package:news/screens/wigets/ArticleItemWidget.dart';
+import 'package:news/model/presentation_models.dart';
+import 'package:news/wigets/ArticleItemWidget.dart';
+import 'package:news/wigets/InfiniteScrollListWidget.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -18,6 +19,8 @@ class _SearchState extends State<SearchScreen> {
   bool _isSearching = false;
   String _error;
   List<Article> _results = List();
+  int _total = -1;
+  String currentQuery = "";
 
   Timer debounceTimer;
 
@@ -28,10 +31,44 @@ class _SearchState extends State<SearchScreen> {
       }
       debounceTimer = Timer(Duration(milliseconds: 500), () {
         if (this.mounted) {
-          _performSearch(_searchQueryController.text);
+          currentQuery = _searchQueryController.text;
+          _performSearch(currentQuery);
         }
       });
     });
+  }
+
+  void _performSearch(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _isSearching = false;
+        _error = null;
+        _results = List();
+      });
+
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _error = null;
+      _results = List();
+    });
+
+    final articlesResponse = await ArticlesDataSource.getAll(query, 1);
+    final articles = articlesResponse.articles;
+    _total = articlesResponse.totalResults;
+
+    if (this._searchQueryController.text == query && this.mounted) {
+      setState(() {
+        _isSearching = false;
+        if (articles != null) {
+          _results = articles;
+        } else {
+          _error = 'Error searching repos';
+        }
+      });
+    }
   }
 
   @override
@@ -71,85 +108,17 @@ class _SearchState extends State<SearchScreen> {
     } else if (_results.isEmpty) {
       return Center(child: Text("Нічого не знайдено :("));
     } else {
-      return ListView.builder(
-          padding: EdgeInsets.symmetric(vertical: 8.0),
-          itemCount: _results.length,
-          itemBuilder: (BuildContext context, int index) {
-            return ArticleItemWidget(article: _results[index]);
-          });
+      return InfiniteScrollListWidget(
+        LoadedData(_results, _total),
+            (article) => ArticleItemWidget(article: article),
+            (page) => loadMoreSearchItems(page),
+      );
     }
   }
 
-  void _performSearch(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _isSearching = false;
-        _error = null;
-        _results = List();
-      });
-
-      return;
-    }
-
-    setState(() {
-      _isSearching = true;
-      _error = null;
-      _results = List();
-    });
-
-    final repos = await _fetchNews(query);
-    if (this._searchQueryController.text == query && this.mounted) {
-      setState(() {
-        _isSearching = false;
-        if (repos != null) {
-          _results = repos;
-        } else {
-          _error = 'Error searching repos';
-        }
-      });
-    }
-  }
-
-  Future<List<Article>> _fetchNews(String query) async {
-    final response = await http.get(
-        'https://newsapi.org/v2/everything?q=$query&apiKey=8c655aa98f4a488aa4dcafff411952d5');
-    final responseJson = json.decode(response.body.toString());
-
-    print(responseJson);
-
-    List rawArticles = responseJson['articles'];
-    return rawArticles.map((rawArticle) {
-      final String sourceId = rawArticle['source']['id'];
-      final String sourceName = rawArticle['source']['name'];
-
-      final String author = rawArticle['author'];
-      final String title = rawArticle['title'];
-      final String description = rawArticle['description'];
-      final String url = rawArticle['url'];
-      final String urlToImage = rawArticle['urlToImage'];
-      final String publishedAt = rawArticle['publishedAt'];
-      final String content = rawArticle['content'];
-
-      return Article(Source(sourceId, sourceName), author, title, description,
-          url, urlToImage, publishedAt, content);
-    }).toList();
-  }
-}
-
-class CenterTitle extends StatelessWidget {
-  final String title;
-
-  CenterTitle(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        alignment: Alignment.center,
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.headline,
-          textAlign: TextAlign.center,
-        ));
+  Future<List<Article>> loadMoreSearchItems(int page) async {
+    print("page:$page");
+    var articlesResponse = await ArticlesDataSource.getAll(currentQuery, page);
+    return articlesResponse.articles;
   }
 }

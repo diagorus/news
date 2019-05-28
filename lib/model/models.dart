@@ -1,3 +1,5 @@
+import 'package:news/model/presentation_models.dart';
+
 class ArticlesResponse {
   final String status;
   final int totalResults;
@@ -11,6 +13,10 @@ class ArticlesResponse {
         articles = (map['articles'] as List)
             .map((rawArticle) => Article.fromMap(rawArticle))
             .toList();
+
+  LoadedData<Article> mapToLoadedData() {
+    return LoadedData<Article>(articles, totalResults);
+  }
 }
 
 class Article {

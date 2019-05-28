@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:news/screens/search.dart';
 import 'package:news/screens/top_articles.dart';
 
-import 'all_articles.dart';
-
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title}) : super(key: key);
 
@@ -15,12 +13,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentPageIndex = 0;
-
-  List<Widget> _pages = [
-    TopArticlesWidget(),
-    AllArticlesWidget(),
-  ];
 
   @override
   Widget build(BuildContext context) {
