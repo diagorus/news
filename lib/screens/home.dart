@@ -1,25 +1,44 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:news/model/simple_data_store.dart';
 import 'package:news/screens/search.dart';
 import 'package:news/screens/top_articles.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  String languageCode = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    restoreLanguageCode();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: Text("Новини"),
+        title: Theme(
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: languageCode,
+              items: buildDropDownItems(),
+              onChanged: (String value) {
+                PreferencesManager().storeLanguageCode(value);
+                setState(() {
+                  languageCode = value;
+                });
+              },
+            ),
+          ),
+          data: ThemeData.dark(),
+        ),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
@@ -34,7 +53,33 @@ class _HomePageState extends State<HomePage> {
           )
         ],
       ),
-      body: TopArticlesWidget(),
+      body: TopArticlesWidget(ValueKey(languageCode), languageCode),
     );
+  }
+
+  List<DropdownMenuItem<String>> buildDropDownItems() {
+    return languageCode.isEmpty ? [
+      DropdownMenuItem(
+        child: Text(''),
+        value: '',
+      ),
+    ] :
+    [
+      DropdownMenuItem(
+        child: Text('Українські новини'),
+        value: 'uk',
+      ),
+      DropdownMenuItem(
+        child: Text('English news'),
+        value: 'en',
+      ),
+    ];
+  }
+
+  restoreLanguageCode() async {
+    var restoredLanguageCode = await PreferencesManager().restoreLanguageCode();
+    setState(() {
+      languageCode = restoredLanguageCode;
+    });
   }
 }

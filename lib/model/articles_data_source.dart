@@ -7,9 +7,11 @@ class ArticlesDataSource {
   static final String baseUrl = 'https://newsapi.org/v2/';
   static final String apiKeyParam = '?apiKey=8c655aa98f4a488aa4dcafff411952d5';
 
-  static Future<ArticlesResponse> getTop(int page) async {
+  static Future<ArticlesResponse> getTop(int page, String language) async {
+    var country = language == "uk" ? "ua" : "us";
+
     final response = await http
-        .get('${baseUrl}top-headlines$apiKeyParam&country=ua&page=$page');
+        .get('${baseUrl}top-headlines$apiKeyParam&country=$country&page=$page');
     final responseJson = json.decode(response.body.toString());
 
 //    printWrapped(responseJson.toString());

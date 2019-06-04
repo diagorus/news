@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:news/localizations.dart';
 import 'package:news/model/articles_data_source.dart';
 import 'package:news/model/models.dart';
 import 'package:news/model/presentation_models.dart';
@@ -24,17 +25,27 @@ class _SearchState extends State<SearchScreen> {
 
   Timer debounceTimer;
 
-  _SearchState() {
-    _searchQueryController.addListener(() {
-      if (debounceTimer != null) {
-        debounceTimer.cancel();
+  @override
+  void initState() {
+    super.initState();
+    _searchQueryController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchQueryController.removeListener(_onSearchChanged);
+    _searchQueryController.dispose();
+    super.dispose();
+  }
+
+  _onSearchChanged() {
+    if (debounceTimer?.isActive ?? false) debounceTimer.cancel();
+
+    debounceTimer = Timer(Duration(milliseconds: 500), () {
+      if (this.mounted) {
+        currentQuery = _searchQueryController.text;
+        _performSearch(currentQuery);
       }
-      debounceTimer = Timer(Duration(milliseconds: 500), () {
-        if (this.mounted) {
-          currentQuery = _searchQueryController.text;
-          _performSearch(currentQuery);
-        }
-      });
     });
   }
 
@@ -65,7 +76,9 @@ class _SearchState extends State<SearchScreen> {
         if (articles != null) {
           _results = articles;
         } else {
-          _error = 'Error searching repos';
+          _error = AppLocalizations
+              .of(context)
+              .searchError;
         }
       });
     }
@@ -80,7 +93,9 @@ class _SearchState extends State<SearchScreen> {
           controller: _searchQueryController,
           style: TextStyle(color: Colors.white, fontSize: 20.0),
           decoration: InputDecoration(
-            hintText: "Пошук статей...",
+            hintText: AppLocalizations
+                .of(context)
+                .searchHint,
             hintStyle: TextStyle(color: Colors.grey[350]),
           ),
         ),
@@ -97,16 +112,23 @@ class _SearchState extends State<SearchScreen> {
           children: <Widget>[
             CircularProgressIndicator(),
             SizedBox(height: 8),
-            Text("Йде пошук, зачекайте, будь-ласка...")
+            Text(AppLocalizations
+                .of(context)
+                .searchProgress)
           ],
         ),
       );
     } else if (_error != null) {
       return Center(child: Text(_error));
     } else if (_searchQueryController.text.isEmpty) {
-      return Center(child: Text("Немає історії пошуку"));
+      return Center(
+          child: Text(AppLocalizations
+              .of(context)
+              .searchEmptyHistory));
     } else if (_results.isEmpty) {
-      return Center(child: Text("Нічого не знайдено :("));
+      return Center(child: Text(AppLocalizations
+          .of(context)
+          .searchEmpty));
     } else {
       return InfiniteScrollListWidget(
         LoadedData(_results, _total),

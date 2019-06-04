@@ -60,3 +60,15 @@ class Source {
       : id = map['id'],
         name = map['name'];
 }
+
+class SearchHistory {
+  final int timestamp;
+  final String query;
+
+  const SearchHistory(this.timestamp,
+      this.query,);
+
+  SearchHistory.fromMap(Map<String, dynamic> map)
+      : timestamp = map['timestamp'],
+        query = map['query'];
+}

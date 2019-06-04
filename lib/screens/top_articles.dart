@@ -7,14 +7,23 @@ import 'package:news/wigets/ArticleItemWidget.dart';
 import 'package:news/wigets/InfiniteScrollListWidget.dart';
 
 class TopArticlesWidget extends StatefulWidget {
+
+  TopArticlesWidget(Key key, this.languageCode) : super(key: key);
+
+  final String languageCode;
+
   @override
-  _TopArticlesState createState() => _TopArticlesState();
+  _TopArticlesState createState() => _TopArticlesState(languageCode);
 }
 
 class _TopArticlesState extends State<TopArticlesWidget> {
   bool isInitialLoading = false;
 
   LoadedData<Article> initialData;
+
+  final String languageCode;
+
+  _TopArticlesState(this.languageCode);
 
   @override
   void initState() {
@@ -41,7 +50,8 @@ class _TopArticlesState extends State<TopArticlesWidget> {
       isInitialLoading = true;
     });
 
-    ArticlesResponse articlesResponse = await ArticlesDataSource.getTop(1);
+    ArticlesResponse articlesResponse =
+    await ArticlesDataSource.getTop(1, languageCode);
     initialData = articlesResponse.mapToLoadedData();
 
     setState(() {
@@ -50,7 +60,8 @@ class _TopArticlesState extends State<TopArticlesWidget> {
   }
 
   Future<List<Article>> _loadMoreItems(int page) async {
-    ArticlesResponse articlesResponse = await ArticlesDataSource.getTop(page);
+    ArticlesResponse articlesResponse =
+    await ArticlesDataSource.getTop(page, languageCode);
     return articlesResponse.articles;
   }
 }
