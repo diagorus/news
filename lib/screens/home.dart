@@ -77,7 +77,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   restoreLanguageCode() async {
-    var restoredLanguageCode = await PreferencesManager().restoreLanguageCode();
+    var restoredLanguageCode = await PreferencesManager()
+        .restoreLanguageCode() ?? 'uk';
     setState(() {
       languageCode = restoredLanguageCode;
     });

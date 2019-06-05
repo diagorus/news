@@ -26,7 +26,8 @@ class DBProvider {
     String path = join(documentsDirectory.path, "NewsDB.db");
     return await openDatabase(path, version: 1, onOpen: (db) {},
         onCreate: (Database db, int version) async {
-      await db.execute("CREATE TABLE SearchHistory (query TEXT PRIMARY KEY)");
+          await db.execute(
+              "CREATE TABLE SearchHistory (query TEXT PRIMARY KEY ON CONFLICT REPLACE, timestamp INTEGER NOT NULL)");
     });
   }
 
@@ -34,6 +35,15 @@ class DBProvider {
     final db = await database;
     var res = await db.rawInsert(
       "INSERT Into SearchHistory (timestamp,query) VALUES (${searchHistory.timestamp},${searchHistory.query})",
+    );
+    return res;
+  }
+
+  insertOrReplaceSearchHistory(SearchHistory searchHistory) async {
+    final db = await database;
+    var res = await db.rawInsert(
+      "INSERT OR REPLACE INTO SearchHistory (timestamp,query) VALUES ('${searchHistory
+          .timestamp}','${searchHistory.query}')",
     );
     return res;
   }
@@ -46,13 +56,13 @@ class DBProvider {
     return res;
   }
 
-  getAllSearchHistoryOrdered(SearchHistory searchHistory) async {
+  Future<List<SearchHistory>> getAllSearchHistoryOrdered() async {
     final db = await database;
     var res = await db.rawQuery(
       "SELECT * FROM SearchHistory ORDER BY timestamp DESC",
     );
     List<SearchHistory> list = res.isNotEmpty
-        ? res.toList().map((c) => SearchHistory.fromMap(c))
+        ? res.map((c) => SearchHistory.fromMap(c)).toList()
         : null;
     return list;
   }

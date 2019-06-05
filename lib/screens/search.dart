@@ -30,6 +30,8 @@ class _SearchState extends State<SearchScreen> {
   void initState() {
     super.initState();
     _searchQueryController.addListener(_onSearchChanged);
+
+    loadHistory();
   }
 
   @override
@@ -40,12 +42,17 @@ class _SearchState extends State<SearchScreen> {
   }
 
   _onSearchChanged() {
-    if (debounceTimer?.isActive ?? false) debounceTimer.cancel();
-
+    if (debounceTimer?.isActive ?? false) {
+      debounceTimer.cancel();
+    }
     debounceTimer = Timer(Duration(milliseconds: 500), () {
       if (this.mounted) {
         currentQuery = _searchQueryController.text;
-        _performSearch(currentQuery);
+        if (currentQuery.isEmpty) {
+          loadHistory();
+        } else {
+          _performSearch(currentQuery);
+        }
       }
     });
   }
@@ -73,7 +80,8 @@ class _SearchState extends State<SearchScreen> {
 
     if (this._searchQueryController.text == query && this.mounted) {
       var timestamp = DateTime.now().millisecondsSinceEpoch;
-      await DBProvider.db.insertOrUpdateSearchHistory(SearchHistory(timestamp, query));
+      await DBProvider.db
+          .insertOrReplaceSearchHistory(SearchHistory(timestamp, query));
 
       setState(() {
         _isSearching = false;
@@ -105,6 +113,14 @@ class _SearchState extends State<SearchScreen> {
   }
 
   Widget _buildBody(BuildContext context) {
+    if (currentQuery.isEmpty) {
+      return buildSearchHistory();
+    } else {
+      return _buildResultsBody(context);
+    }
+  }
+
+  Widget _buildResultsBody(BuildContext context) {
     if (_isSearching) {
       return Center(
         child: Column(
@@ -119,15 +135,14 @@ class _SearchState extends State<SearchScreen> {
     } else if (_error != null) {
       return Center(child: Text(_error));
     } else if (_searchQueryController.text.isEmpty) {
-      return Center(
-          child: Text(AppLocalizations.of(context).searchEmptyHistory));
+      return buildSearchHistory();
     } else if (_results.isEmpty) {
       return Center(child: Text(AppLocalizations.of(context).searchEmpty));
     } else {
       return InfiniteScrollListWidget(
         LoadedData(_results, _total),
-        (article) => ArticleItemWidget(article: article),
-        (page) => loadMoreSearchItems(page),
+            (article) => ArticleItemWidget(article: article),
+            (page) => loadMoreSearchItems(page),
       );
     }
   }
@@ -136,5 +151,49 @@ class _SearchState extends State<SearchScreen> {
     print("page:$page");
     var articlesResponse = await ArticlesDataSource.getAll(currentQuery, page);
     return articlesResponse.articles;
+  }
+
+  var isHistoryLoading = false;
+  List<SearchHistory> searchHistory = [];
+
+  Widget buildSearchHistory() {
+    if (isHistoryLoading) {
+      return Center(child: CircularProgressIndicator());
+    } else if (searchHistory.isEmpty) {
+      return Center(
+          child: Text(AppLocalizations
+              .of(context)
+              .searchEmptyHistory));
+    } else {
+      return ListView.builder(
+        itemCount: searchHistory.length,
+        itemBuilder: (context, index) {
+          return Row(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(Icons.history),
+              ),
+              Flexible(child: Text(searchHistory[index].query)),
+              Icon(Icons.call_made)
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  loadHistory() async {
+    setState(() {
+      isHistoryLoading = true;
+      searchHistory = List();
+    });
+
+    var searchHistoryData = await DBProvider.db.getAllSearchHistoryOrdered() ??
+        [];
+    setState(() {
+      isHistoryLoading = false;
+      searchHistory = searchHistoryData;
+    });
   }
 }
