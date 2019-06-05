@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:news/localizations.dart';
 import 'package:news/model/articles_data_source.dart';
+import 'package:news/model/database.dart';
 import 'package:news/model/models.dart';
 import 'package:news/model/presentation_models.dart';
 import 'package:news/wigets/ArticleItemWidget.dart';
@@ -71,14 +72,15 @@ class _SearchState extends State<SearchScreen> {
     _total = articlesResponse.totalResults;
 
     if (this._searchQueryController.text == query && this.mounted) {
+      var timestamp = DateTime.now().millisecondsSinceEpoch;
+      await DBProvider.db.insertOrUpdateSearchHistory(SearchHistory(timestamp, query));
+
       setState(() {
         _isSearching = false;
         if (articles != null) {
           _results = articles;
         } else {
-          _error = AppLocalizations
-              .of(context)
-              .searchError;
+          _error = AppLocalizations.of(context).searchError;
         }
       });
     }
@@ -93,9 +95,7 @@ class _SearchState extends State<SearchScreen> {
           controller: _searchQueryController,
           style: TextStyle(color: Colors.white, fontSize: 20.0),
           decoration: InputDecoration(
-            hintText: AppLocalizations
-                .of(context)
-                .searchHint,
+            hintText: AppLocalizations.of(context).searchHint,
             hintStyle: TextStyle(color: Colors.grey[350]),
           ),
         ),
@@ -112,9 +112,7 @@ class _SearchState extends State<SearchScreen> {
           children: <Widget>[
             CircularProgressIndicator(),
             SizedBox(height: 8),
-            Text(AppLocalizations
-                .of(context)
-                .searchProgress)
+            Text(AppLocalizations.of(context).searchProgress)
           ],
         ),
       );
@@ -122,18 +120,14 @@ class _SearchState extends State<SearchScreen> {
       return Center(child: Text(_error));
     } else if (_searchQueryController.text.isEmpty) {
       return Center(
-          child: Text(AppLocalizations
-              .of(context)
-              .searchEmptyHistory));
+          child: Text(AppLocalizations.of(context).searchEmptyHistory));
     } else if (_results.isEmpty) {
-      return Center(child: Text(AppLocalizations
-          .of(context)
-          .searchEmpty));
+      return Center(child: Text(AppLocalizations.of(context).searchEmpty));
     } else {
       return InfiniteScrollListWidget(
         LoadedData(_results, _total),
-            (article) => ArticleItemWidget(article: article),
-            (page) => loadMoreSearchItems(page),
+        (article) => ArticleItemWidget(article: article),
+        (page) => loadMoreSearchItems(page),
       );
     }
   }
