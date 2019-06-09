@@ -3,9 +3,25 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:news/localizations.dart';
 import 'package:news/screens/home.dart';
 
+import 'application.dart';
+
 void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  AppLocalizationsDelegate _newLocaleDelegate;
+
+  @override
+  void initState() {
+    super.initState();
+    _newLocaleDelegate = AppLocalizationsDelegate(newLocale: null);
+    application.onLocaleChanged = onLocaleChange;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,15 +42,18 @@ class MyApp extends StatelessWidget {
         ),
       ),
       localizationsDelegates: [
-        const AppLocalizationsDelegate(),
+        _newLocaleDelegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: [
-        const Locale("uk"),
-        const Locale("en"),
-      ],
+      supportedLocales: application.supportedLocales(),
       home: HomePage(),
     );
+  }
+
+  void onLocaleChange(Locale locale) {
+    setState(() {
+      _newLocaleDelegate = AppLocalizationsDelegate(newLocale: locale);
+    });
   }
 }

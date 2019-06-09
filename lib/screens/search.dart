@@ -45,13 +45,16 @@ class _SearchState extends State<SearchScreen> {
     if (debounceTimer?.isActive ?? false) {
       debounceTimer.cancel();
     }
-    debounceTimer = Timer(Duration(milliseconds: 500), () {
+    debounceTimer = Timer(Duration(milliseconds: 1000), () {
       if (this.mounted) {
-        currentQuery = _searchQueryController.text;
-        if (currentQuery.isEmpty) {
+        var newQuery = _searchQueryController.text;
+        if (newQuery.isEmpty) {
           loadHistory();
         } else {
-          _performSearch(currentQuery);
+          if (currentQuery != newQuery) {
+            currentQuery = newQuery;
+            _performSearch(newQuery);
+          }
         }
       }
     });
@@ -105,6 +108,15 @@ class _SearchState extends State<SearchScreen> {
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context).searchHint,
             hintStyle: TextStyle(color: Colors.grey[350]),
+            suffixIcon: IconButton(
+              icon: Icon(
+                Icons.close,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                _searchQueryController.clear();
+              },
+            ),
           ),
         ),
       ),
@@ -140,9 +152,10 @@ class _SearchState extends State<SearchScreen> {
       return Center(child: Text(AppLocalizations.of(context).searchEmpty));
     } else {
       return InfiniteScrollListWidget(
-        LoadedData(_results, _total),
-            (article) => ArticleItemWidget(article: article),
-            (page) => loadMoreSearchItems(page),
+        key: Key(currentQuery),
+        initialItems: LoadedData(_results, _total),
+        onCreateItem: (article) => ArticleItemWidget(article),
+        onLoadMore: (page) => loadMoreSearchItems(page),
       );
     }
   }
@@ -168,19 +181,79 @@ class _SearchState extends State<SearchScreen> {
       return ListView.builder(
         itemCount: searchHistory.length,
         itemBuilder: (context, index) {
-          return Row(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(Icons.history),
+          var currentSearchHistory = searchHistory[index];
+          return Dismissible(
+            background: Container(
+              color: Colors.red,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Text(AppLocalizations
+                        .of(context)
+                        .searchRemove,
+                        style: TextStyle(color: Colors.white)),
+                    Icon(Icons.delete, color: Colors.white)
+                  ],
+                ),
               ),
-              Flexible(child: Text(searchHistory[index].query)),
-              Icon(Icons.call_made)
-            ],
+            ),
+            key: Key(currentSearchHistory.query),
+            onDismissed: (direction) {
+              setState(() {
+                DBProvider.db.deleteSearchHistory(currentSearchHistory);
+                searchHistory.removeAt(index);
+              });
+
+              Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text(AppLocalizations
+                      .of(context)
+                      .searchRemoved)));
+            },
+            child: InkWell(
+              onTap: () {
+                setSearch(currentSearchHistory);
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(
+                      Icons.history,
+                      color: Colors.grey[500],
+                    ),
+                    Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text(currentSearchHistory.query),
+                        )),
+                    InkWell(
+                      child: Icon(
+                        Icons.call_made,
+                        color: Colors.grey[600],
+                      ),
+                      onTap: () {
+                        setSearch(currentSearchHistory);
+                      },
+                    )
+                  ],
+                ),
+              ),
+            ),
           );
         },
       );
     }
+  }
+
+  setSearch(SearchHistory currentSearchHistory) {
+    _searchQueryController.text = currentSearchHistory.query;
+    _searchQueryController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _searchQueryController.text.length));
   }
 
   loadHistory() async {
@@ -189,8 +262,8 @@ class _SearchState extends State<SearchScreen> {
       searchHistory = List();
     });
 
-    var searchHistoryData = await DBProvider.db.getAllSearchHistoryOrdered() ??
-        [];
+    var searchHistoryData =
+        await DBProvider.db.getAllSearchHistoryOrdered() ?? [];
     setState(() {
       isHistoryLoading = false;
       searchHistory = searchHistoryData;

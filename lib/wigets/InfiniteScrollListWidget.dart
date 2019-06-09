@@ -3,17 +3,20 @@ import 'package:flutter/widgets.dart';
 import 'package:news/model/presentation_models.dart';
 
 class InfiniteScrollListWidget<T> extends StatefulWidget {
-  final LoadedData<T> _initialItems;
-  final Widget Function(T) _onCreateItem;
-  final Future<List<T>> Function(int) _onLoadMore;
+  final LoadedData<T> initialItems;
+  final Widget Function(T) onCreateItem;
+  final Future<List<T>> Function(int) onLoadMore;
 
-  InfiniteScrollListWidget(this._initialItems,
-      this._onCreateItem,
-      this._onLoadMore,);
+  InfiniteScrollListWidget({
+    Key key,
+    @required this.initialItems,
+    @required this.onCreateItem,
+    @required this.onLoadMore,
+  }) : super(key: key);
 
   @override
   _InfiniteScrollListState<T> createState() =>
-      _InfiniteScrollListState<T>(_initialItems, _onCreateItem, _onLoadMore);
+      _InfiniteScrollListState<T>(initialItems, onCreateItem, onLoadMore);
 }
 
 class _InfiniteScrollListState<T> extends State<InfiniteScrollListWidget> {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
+import 'package:http_logger/http_logger.dart';
+import 'package:http_middleware/http_middleware.dart';
 import 'package:news/model/models.dart';
 
 class ArticlesDataSource {
@@ -9,6 +10,10 @@ class ArticlesDataSource {
 
   static Future<ArticlesResponse> getTop(int page, String language) async {
     var country = language == "uk" ? "ua" : "us";
+
+    HttpWithMiddleware http = HttpWithMiddleware.build(middlewares: [
+      HttpLogger(logLevel: LogLevel.BODY),
+    ]);
 
     final response = await http
         .get('${baseUrl}top-headlines$apiKeyParam&country=$country&page=$page');
@@ -20,6 +25,10 @@ class ArticlesDataSource {
   }
 
   static Future<ArticlesResponse> getAll(String query, int page) async {
+    HttpWithMiddleware http = HttpWithMiddleware.build(middlewares: [
+      HttpLogger(logLevel: LogLevel.BODY),
+    ]);
+
     final response = await http
         .get('${baseUrl}everything$apiKeyParam&q=$query&page=$page');
     final responseJson = json.decode(response.body.toString());

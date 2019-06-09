@@ -4,6 +4,8 @@ import 'package:news/model/simple_data_store.dart';
 import 'package:news/screens/search.dart';
 import 'package:news/screens/top_articles.dart';
 
+import '../application.dart';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -33,6 +35,7 @@ class _HomePageState extends State<HomePage> {
                 PreferencesManager().storeLanguageCode(value);
                 setState(() {
                   languageCode = value;
+                  application.onLocaleChanged(Locale(languageCode));
                 });
               },
             ),
@@ -81,6 +84,7 @@ class _HomePageState extends State<HomePage> {
         .restoreLanguageCode() ?? 'uk';
     setState(() {
       languageCode = restoredLanguageCode;
+      application.onLocaleChanged(Locale(languageCode));
     });
   }
 }

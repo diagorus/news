@@ -7,7 +7,6 @@ import 'package:news/wigets/ArticleItemWidget.dart';
 import 'package:news/wigets/InfiniteScrollListWidget.dart';
 
 class TopArticlesWidget extends StatefulWidget {
-
   TopArticlesWidget(Key key, this.languageCode) : super(key: key);
 
   final String languageCode;
@@ -37,10 +36,10 @@ class _TopArticlesState extends State<TopArticlesWidget> {
     if (isInitialLoading) {
       return Center(child: CircularProgressIndicator());
     } else {
-      return InfiniteScrollListWidget<Article>(
-        initialData,
-            (article) => ArticleItemWidget(article: article),
-            (page) => _loadMoreItems(page),
+      return InfiniteScrollListWidget(
+        initialItems: initialData,
+        onCreateItem: (article) => ArticleItemWidget(article),
+        onLoadMore: (page) => _loadMoreItems(page),
       );
     }
   }

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'application.dart';
+
 class AppLocalizations {
   AppLocalizations(this.locale);
 
@@ -20,14 +22,9 @@ class AppLocalizations {
       'searchProgress': 'Йде пошук, зачекайте, будь-ласка...',
       'searchEmptyHistory': 'Немає історії пошуку',
       'searchEmpty': 'Нічого не знайдено :(',
-    },
-    'ru': {
-      'appTitle': 'Новости',
-      'searchError': 'Ошибка поиска',
-      'searchHint': 'Поиск новостей...',
-      'searchProgress': 'Поиск, подождите, пожалуйста...',
-      'searchEmptyHistory': 'Нет истории поиска',
-      'searchEmpty': 'Ничего не найдено :(',
+      'searchRemove': 'Видалити',
+      'searchRemoved': 'Видалено',
+      'open': 'Відкрити'
     },
     'en': {
       'appTitle': 'News',
@@ -36,6 +33,9 @@ class AppLocalizations {
       'searchProgress': 'Searching, wait a bit...',
       'searchEmptyHistory': 'Search history empty',
       'searchEmpty': 'Nothing found :(',
+      'searchRemove': 'Remove',
+      'searchRemoved': 'Removed',
+      'open': 'Open'
     },
   };
 
@@ -54,20 +54,31 @@ class AppLocalizations {
 
   String get searchEmpty =>
       _localizedValues[locale.languageCode]['searchEmpty'];
+
+  String get searchRemove =>
+      _localizedValues[locale.languageCode]['searchRemove'];
+
+  String get searchRemoved =>
+      _localizedValues[locale.languageCode]['searchRemoved'];
+
+  String get open => _localizedValues[locale.languageCode]['open'];
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
-  const AppLocalizationsDelegate();
+  final Locale newLocale;
+
+  const AppLocalizationsDelegate({this.newLocale});
 
   @override
   bool isSupported(Locale locale) =>
-      ['uk', 'ru', 'en'].contains(locale.languageCode);
+      application.supportedLanguagesCodes.contains(locale.languageCode);
 
   @override
   Future<AppLocalizations> load(Locale locale) {
-    return SynchronousFuture<AppLocalizations>(AppLocalizations(locale));
+    return SynchronousFuture<AppLocalizations>(
+        AppLocalizations(newLocale ?? locale));
   }
 
   @override
-  bool shouldReload(AppLocalizationsDelegate old) => false;
+  bool shouldReload(AppLocalizationsDelegate old) => true;
 }

@@ -72,4 +72,12 @@ class DBProvider {
       await insertSearchHistory(searchHistory);
     }
   }
+
+  deleteSearchHistory(SearchHistory searchHistory) async {
+    final db = await database;
+    var res = await db.rawDelete(
+      "DELETE FROM SearchHistory WHERE query='${searchHistory.query}'",
+    );
+    return res;
+  }
 }
