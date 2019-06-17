@@ -50,7 +50,7 @@ class ArticleItemWidget extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: 8),
-                getWidget(),
+                getImage(),
               ],
             ),
           ),
@@ -59,7 +59,7 @@ class ArticleItemWidget extends StatelessWidget {
     );
   }
 
-  Widget getWidget() {
+  Widget getImage() {
     if (article.urlToImage != null) {
       return FadeInImage.memoryNetwork(
         placeholder: kTransparentImage,

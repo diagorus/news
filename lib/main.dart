@@ -41,6 +41,7 @@ class _MyAppState extends State<MyApp> {
           body1: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
         ),
       ),
+      debugShowCheckedModeBanner: false,
       localizationsDelegates: [
         _newLocaleDelegate,
         GlobalMaterialLocalizations.delegate,
